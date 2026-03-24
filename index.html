@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TulipNex | User Dashboard</title>
+    <title>TulipNex | Live Dashboard</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -15,12 +15,7 @@
         .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
         .gradient-text { background: linear-gradient(135deg, #4ade80, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
         .card-hover:hover { transform: translateY(-4px); transition: all 0.3s ease; border-color: #4ade80; }
-        ::-webkit-scrollbar { width: 6px; }
-        ::-webkit-scrollbar-track { background: #0f172a; }
-        ::-webkit-scrollbar-thumb { background: #334155; border-radius: 10px; }
-        
-        /* Animasi Loading */
-        .loader { border: 3px solid rgba(255,255,255,0.1); border-bottom-color: #4ade80; border-radius: 50%; display: inline-block; box-sizing: border-box; animation: rotation 1s linear infinite; }
+        .loader { border: 3px solid rgba(255,255,255,0.1); border-bottom-color: #4ade80; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
         @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
 </head>
@@ -29,383 +24,236 @@
 
     <script type="text/babel">
         // =========================================================
-        // PENGATURAN SERVER BOT (Ubah Sesuai IP VPS/Hosting Anda!)
+        // KONFIGURASI LINK GITHUB (Sesuaikan dengan Repo Anda)
         // =========================================================
-        const SERVER_URL = "http://45.142.115.147:8027"; // Contoh: "http://123.45.67.89:3000" atau "https://api.domainanda.com"
+        const GITHUB_USER = "TulipNex";
+        const GITHUB_REPO = "Dashboard";
+        const GITHUB_BRANCH = "main"; // Biasanya 'main' atau 'master'
+        
+        // URL Raw GitHub untuk mengambil database.json
+        const RAW_DB_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/database.json`;
         // =========================================================
 
         const { useState, useEffect } = React;
 
         function App() {
-            // State untuk Login & Koneksi API
             const [isLoggedIn, setIsLoggedIn] = useState(false);
             const [isLoading, setIsLoading] = useState(false);
             const [errorMsg, setErrorMsg] = useState("");
-            
             const [phoneNumber, setPhoneNumber] = useState("");
-
-            // Data State
+            
+            // Data States
             const [userData, setUserData] = useState(null);
             const [market, setMarket] = useState(null);
             const [board, setBoard] = useState(null);
 
-            // Fungsi untuk Mengambil Data dari Bot (Real-time Fetch)
             const fetchData = async (phone) => {
+                if (!phone) return setErrorMsg("Harap masukkan nomor WhatsApp!");
                 setIsLoading(true);
                 setErrorMsg("");
+                
                 try {
-                    // Membersihkan nomor HP dari karakter selain angka
-                    const cleanPhone = phone.replace(/[^0-9]/g, '');
-                    const endpoint = `${SERVER_URL.replace(/\/$/, '')}/api/dashboard/${cleanPhone}`;
+                    // Gunakan cache-buster (?t=...) agar browser selalu mengambil data terbaru dari GitHub
+                    const response = await fetch(`${RAW_DB_URL}?t=${new Date().getTime()}`);
                     
-                    const response = await fetch(endpoint);
-                    const data = await response.json();
-
                     if (!response.ok) {
-                        throw new Error(data.error || "Gagal menghubungi server");
+                        throw new Error("Gagal mengambil database. Pastikan file database.json sudah di-upload ke GitHub.");
+                    }
+                    
+                    const db = await response.json();
+                    
+                    // Format nomor untuk mencari di database
+                    const cleanPhone = phone.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+                    const user = db.users[cleanPhone];
+                    
+                    if (!user) {
+                        throw new Error("Nomor tidak ditemukan di database bot. Pastikan Anda sudah terdaftar di bot.");
                     }
 
-                    // Mapping Data User
-                    const u = data.user;
-                    const m = data.market;
-                    const dirs = data.directors;
+                    const m = db.settings?.trading || {};
+                    const tnxHolders = Object.entries(db.users)
+                        .filter(u => (u[1].tulipnex || 0) > 0)
+                        .sort((a, b) => (b[1].tulipnex || 0) - (a[1].tulipnex || 0));
 
-                    // Kalkulasi Nilai Aset
-                    const calculateAssetValue = () => {
-                        let total = 0;
-                        if(u.ivl) total += u.ivl * (m.prices?.IVL || 0);
-                        if(u.lbt) total += u.lbt * (m.prices?.LBT || 0);
-                        if(u.irc) total += u.irc * (m.prices?.IRC || 0);
-                        if(u.ltn) total += u.ltn * (m.prices?.LTN || 0);
-                        if(u.rsx) total += u.rsx * (m.prices?.RSX || 0);
-                        if(u.tulipnex) total += u.tulipnex * (m.prices?.TNX || 0);
-                        return total;
-                    };
+                    // Tentukan Role Direksi
+                    let role = "Trader Aktif";
+                    if (tnxHolders[0]?.[0] === cleanPhone) role = "👑 CEO";
+                    else if (tnxHolders[1]?.[0] === cleanPhone) role = "🎩 Komisaris";
+                    else if (tnxHolders[2]?.[0] === cleanPhone) role = "👔 Direktur";
 
-                    // Mencari Peran (Role)
-                    let currentRole = "Trader Awam";
-                    const jid = cleanPhone + '@s.whatsapp.net';
-                    if (dirs[0]?.id === jid) currentRole = "👑 CEO";
-                    else if (dirs[1]?.id === jid) currentRole = "🎩 Komisaris";
-                    else if (dirs[2]?.id === jid) currentRole = "👔 Direktur";
-
+                    // Set Data User
                     setUserData({
-                        name: u.name || "Unknown",
-                        level: u.level || 0,
-                        exp: u.exp || 0,
-                        maxExp: (u.level + 1) * 1000, // Simulasi Max Exp
-                        limit: u.limit || 0,
-                        money: u.money || 0,
-                        assetValue: calculateAssetValue(),
-                        bankDebt: u.utangbank || 0, // Sesuaikan dengan key database utang Anda
-                        tulipRole: currentRole,
-                        registered: u.registered || false,
-                        premium: u.premium || false,
-                        inventory: {
-                            wood: u.wood || 0, rock: u.rock || 0, diamond: u.diamond || 0, 
-                            emas: u.emas || 0, iron: u.iron || 0, botol: u.botol || 0, sampah: u.sampah || 0
-                        },
+                        name: user.name || "Player",
+                        level: user.level || 0,
+                        exp: user.exp || 0,
+                        maxExp: (user.level + 1) * 1000,
+                        money: user.money || 0,
+                        bankDebt: user.bankDebt || 0,
+                        role: role,
                         assets: {
-                            IVL: u.ivl || 0, LBT: u.lbt || 0, IRC: u.irc || 0, 
-                            LTN: u.ltn || 0, RSX: u.rsx || 0, TNX: u.tulipnex || 0
+                            IVL: user.ivl || 0, LBT: user.lbt || 0, IRC: user.irc || 0,
+                            LTN: user.ltn || 0, RSX: user.rsx || 0, TNX: user.tulipnex || 0
                         }
                     });
 
                     setMarket({
                         prices: m.prices || {},
-                        lastUpdate: m.lastUpdate || "Belum ada data"
+                        lastUpdate: m.lastMinuteMarker || "-",
+                        vault: m.vault || 0
                     });
 
-                    setBoard({
-                        vault: m.vault || 0,
-                        taxRates: m.taxRates || { IVL: 1.5, LBT: 1.5, IRC: 1.5, LTN: 1.5, RSX: 1.5, TNX: 2.5 },
-                        pendingProposal: m.pendingProposal,
-                        directors: dirs
-                    });
+                    setBoard(tnxHolders.slice(0, 3).map((h, i) => ({
+                        name: h[1].name,
+                        tnx: h[1].tulipnex,
+                        role: i === 0 ? "CEO" : i === 1 ? "Komisaris" : "Direktur"
+                    })));
 
                     setIsLoggedIn(true);
                 } catch (err) {
-                    setErrorMsg(err.message === "Failed to fetch" ? "Koneksi ke bot gagal. Pastikan API bot menyala." : err.message);
+                    setErrorMsg(err.message);
                 } finally {
                     setIsLoading(false);
                 }
             };
 
-            const handleLogin = (e) => {
-                e.preventDefault();
-                if(!phoneNumber) return setErrorMsg("Harap isi Nomor WhatsApp Anda");
-                fetchData(phoneNumber);
-            };
-
-            // ---- TAMPILAN LOGIN ----
             if (!isLoggedIn) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-4">
-                        <div className="glass p-8 rounded-3xl w-full max-w-md relative overflow-hidden shadow-2xl">
-                            <div className="absolute top-0 right-0 p-4 opacity-10">
-                                <i className="fa-brands fa-envira text-8xl"></i>
-                            </div>
-                            <div className="text-center mb-8 relative z-10">
-                                <h1 className="text-3xl font-bold gradient-text mb-2">TulipNex</h1>
-                                <p className="text-slate-400 text-sm">Masuk ke Ekosistem Digital</p>
+                    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-950">
+                        <div className="glass p-8 rounded-3xl w-full max-w-md shadow-2xl border-green-500/20">
+                            <div className="text-center mb-8">
+                                <h1 className="text-4xl font-black gradient-text tracking-tighter">TULIPNEX</h1>
+                                <p className="text-slate-400 text-sm mt-2 font-medium">Cyber-Botanical Exchange Dashboard</p>
                             </div>
 
                             {errorMsg && (
-                                <div className="bg-red-500/20 border border-red-500/50 text-red-400 p-3 rounded-xl mb-6 text-sm flex items-start gap-2 animate-pulse">
-                                    <i className="fa-solid fa-circle-exclamation mt-0.5"></i> {errorMsg}
+                                <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl mb-6 text-xs flex items-center gap-2">
+                                    <i className="fa-solid fa-circle-exclamation"></i> {errorMsg}
                                 </div>
                             )}
 
-                            <form onSubmit={handleLogin} className="space-y-6 relative z-10">
-                                <div>
-                                    <label className="block text-xs text-slate-400 mb-1 ml-1 font-semibold">Nomor WhatsApp Terdaftar</label>
-                                    <div className="relative">
-                                        <i className="fa-brands fa-whatsapp absolute left-4 top-3.5 text-slate-500"></i>
-                                        <input 
-                                            type="text" 
-                                            className="w-full bg-slate-800/50 border border-slate-700 rounded-xl py-3 pl-10 pr-4 text-sm text-white focus:outline-none focus:border-green-500 focus:ring-1 focus:ring-green-500 transition-all"
-                                            value={phoneNumber}
-                                            onChange={(e) => setPhoneNumber(e.target.value)}
-                                            placeholder="Contoh: 62812345678"
-                                            autoComplete="off"
-                                        />
-                                    </div>
-                                    <p className="text-[10px] text-slate-500 mt-2 ml-1"><i className="fa-solid fa-circle-info mr-1"></i>Gunakan format nomor sesuai yang terdaftar di bot (awali dengan kode negara, contoh: 62).</p>
+                            <div className="space-y-4">
+                                <div className="relative">
+                                    <i className="fa-brands fa-whatsapp absolute left-4 top-4 text-slate-500"></i>
+                                    <input 
+                                        type="text" 
+                                        placeholder="628xxxxxxxxxx" 
+                                        className="w-full bg-slate-900/50 p-4 pl-12 rounded-2xl border border-slate-800 outline-none focus:border-green-500 transition-all text-sm"
+                                        value={phoneNumber}
+                                        onChange={(e) => setPhoneNumber(e.target.value)}
+                                    />
                                 </div>
                                 <button 
-                                    type="submit" 
-                                    disabled={isLoading}
-                                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 hover:from-green-400 hover:to-emerald-500 text-white font-bold py-3 rounded-xl transition-all shadow-lg shadow-green-500/30 flex justify-center items-center gap-2"
+                                    onClick={() => fetchData(phoneNumber)}
+                                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 py-4 rounded-2xl font-bold text-white shadow-lg shadow-green-500/20 hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2"
                                 >
-                                    {isLoading ? <span className="loader w-5 h-5"></span> : <><i className="fa-solid fa-right-to-bracket"></i> Akses Dashboard</>}
+                                    {isLoading ? <span className="loader w-5 h-5"></span> : "Masuk ke Dashboard"}
                                 </button>
-                            </form>
+                            </div>
+                            <p className="text-center text-[10px] text-slate-600 mt-6 uppercase tracking-widest font-bold">Data Terenkripsi & Aman</p>
                         </div>
                     </div>
                 );
             }
 
-            // Kalkulasi Total Networth
-            const networth = userData.money + userData.assetValue - userData.bankDebt;
-
-            // ---- TAMPILAN DASHBOARD ----
             return (
-                <div className="min-h-screen p-4 md:p-8">
-                    {/* Header */}
-                    <header className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center mb-10 gap-4">
+                <div className="min-h-screen p-4 md:p-8 bg-slate-950">
+                    <header className="max-w-7xl mx-auto flex justify-between items-center mb-10">
                         <div>
-                            <h1 className="text-3xl font-bold gradient-text">TulipNex Dashboard</h1>
-                            <p className="text-slate-400 flex items-center gap-2">
-                                <span className="w-2 h-2 bg-green-400 rounded-full animate-pulse"></span>
-                                Live Data Terhubung
-                            </p>
+                            <h1 className="text-2xl font-bold gradient-text">TulipNex Live</h1>
+                            <p className="text-[10px] text-slate-500 uppercase tracking-widest">Database Sync: GitHub Raw</p>
                         </div>
                         <div className="flex items-center gap-4">
-                            <button 
+                             <button 
                                 onClick={() => fetchData(phoneNumber)}
-                                disabled={isLoading}
-                                className="glass px-4 py-2 rounded-xl hover:bg-slate-800 transition-colors text-sm flex items-center gap-2"
+                                className="glass p-2 px-4 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all"
                             >
-                                <i className={`fa-solid fa-rotate-right ${isLoading ? 'animate-spin text-green-400' : ''}`}></i> Refresh
+                                <i className="fa-solid fa-sync mr-1"></i> Refresh
                             </button>
-                            <button onClick={() => setIsLoggedIn(false)} className="glass px-4 py-2 rounded-xl hover:bg-red-500/20 hover:text-red-400 hover:border-red-500/50 transition-colors text-sm">
-                                Logout <i className="fa-solid fa-right-from-bracket ml-1"></i>
+                            <button 
+                                onClick={() => setIsLoggedIn(false)}
+                                className="text-xs text-red-400 font-bold hover:underline"
+                            >
+                                Logout
                             </button>
-                            <div className="flex items-center gap-3 glass p-2 px-4 rounded-2xl ml-2">
-                                <div className="text-right hidden sm:block">
-                                    <p className="text-xs text-slate-400 flex items-center justify-end gap-1">
-                                        {userData.premium && <i className="fa-solid fa-star text-yellow-400 text-[10px]"></i>}
-                                        {userData.tulipRole}
-                                    </p>
-                                    <p className="font-semibold">{userData.name}</p>
-                                </div>
-                                <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-green-400 to-blue-500 flex items-center justify-center text-white font-bold">
-                                    {userData.name[0]}
-                                </div>
-                            </div>
                         </div>
                     </header>
 
-                    <main className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        
-                        {/* Column 1: Profile & Stats */}
-                        <div className="space-y-6">
-                            {/* Player Profile & Portfolio */}
-                            <div className="glass p-6 rounded-3xl relative overflow-hidden">
-                                <div className="absolute top-0 right-0 p-4 opacity-10 pointer-events-none">
-                                    <i className="fa-solid fa-id-card-clip text-8xl"></i>
-                                </div>
-                                <h2 className="text-lg font-bold mb-4 flex items-center gap-2">
-                                    <i className="fa-solid fa-user-astronaut text-green-400"></i> Player Profile
-                                </h2>
-                                
-                                <div className="space-y-4 relative z-10">
-                                    <div className="flex justify-between items-center mb-1">
-                                        <div className="flex gap-2">
-                                            {userData.registered && <span className="px-2 py-0.5 bg-blue-500/20 text-blue-400 text-[10px] rounded-md font-bold border border-blue-500/30">VERIFIED</span>}
-                                            {userData.premium && <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-[10px] rounded-md font-bold border border-yellow-500/30">PREMIUM</span>}
-                                        </div>
-                                        <span className="font-mono text-green-400 font-bold">Lvl {userData.level}</span>
-                                    </div>
-                                    
+                    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
+                        {/* Profile Section */}
+                        <div className="lg:col-span-1 space-y-6">
+                            <div className="glass p-8 rounded-[2rem] border-green-500/10">
+                                <div className="flex items-center gap-4 mb-8">
+                                    <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg">👤</div>
                                     <div>
-                                        <div className="flex justify-between text-xs text-slate-400 mb-1">
-                                            <span>EXP</span>
-                                            <span>{userData.exp.toLocaleString()} / {userData.maxExp.toLocaleString()}</span>
-                                        </div>
-                                        <div className="w-full bg-slate-700 h-1.5 rounded-full overflow-hidden">
-                                            <div className="bg-green-500 h-full" style={{width: `${Math.min((userData.exp/userData.maxExp)*100, 100)}%`}}></div>
-                                        </div>
+                                        <h2 className="text-xl font-bold">{userData.name}</h2>
+                                        <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-bold">{userData.role}</span>
                                     </div>
-
-                                    {/* Portfolio Summary */}
-                                    <div className="mt-6 pt-4 border-t border-slate-700/50">
-                                        <p className="text-xs text-slate-400 mb-1">Networth (Total Kekayaan)</p>
-                                        <p className="text-2xl font-bold text-white mb-4">Rp {networth.toLocaleString('id-ID')}</p>
-                                        
-                                        <div className="grid grid-cols-2 gap-3">
-                                            <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                                                <p className="text-[10px] text-slate-400 mb-1"><i className="fa-solid fa-wallet text-blue-400"></i> Uang Tunai</p>
-                                                <p className="text-sm font-semibold">Rp {userData.money.toLocaleString('id-ID')}</p>
-                                            </div>
-                                            <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                                                <p className="text-[10px] text-slate-400 mb-1"><i className="fa-solid fa-chart-pie text-purple-400"></i> Nilai Aset</p>
-                                                <p className="text-sm font-semibold">Rp {userData.assetValue.toLocaleString('id-ID')}</p>
-                                            </div>
-                                            <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                                                <p className="text-[10px] text-slate-400 mb-1"><i className="fa-solid fa-building-columns text-red-400"></i> Utang Bank</p>
-                                                <p className="text-sm font-semibold">{userData.bankDebt > 0 ? `Rp ${userData.bankDebt.toLocaleString('id-ID')}` : '-'}</p>
-                                            </div>
-                                            <div className="bg-slate-800/60 p-3 rounded-xl border border-slate-700/50">
-                                                <p className="text-[10px] text-slate-400 mb-1"><i className="fa-solid fa-bolt text-yellow-400"></i> Limit Harian</p>
-                                                <p className="text-sm font-semibold">{userData.limit}</p>
-                                            </div>
-                                        </div>
+                                </div>
+                                
+                                <div className="space-y-4">
+                                    <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl">
+                                        <span className="text-slate-400 text-sm">Tunai</span>
+                                        <span className="font-bold">Rp {userData.money.toLocaleString('id-ID')}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl">
+                                        <span className="text-slate-400 text-sm">Utang</span>
+                                        <span className="font-bold text-red-400">Rp {userData.bankDebt.toLocaleString('id-ID')}</span>
+                                    </div>
+                                    <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl">
+                                        <span className="text-slate-400 text-sm">Level</span>
+                                        <span className="font-bold text-blue-400">Lv {userData.level}</span>
                                     </div>
                                 </div>
                             </div>
                         </div>
 
-                        {/* Column 2: Market, Corporate & Inventory */}
+                        {/* Market & Board Section */}
                         <div className="lg:col-span-2 space-y-6">
-                            
-                            {/* Dewan Direksi (Corporate) */}
-                            <div className="glass p-6 rounded-3xl border border-indigo-500/30">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-lg font-bold flex items-center gap-2">
-                                        <i className="fa-solid fa-landmark text-indigo-400"></i> TulipNex Corporate
-                                    </h2>
-                                    <span className="text-xs bg-indigo-500/20 text-indigo-300 px-3 py-1 rounded-full border border-indigo-500/30">Dewan Direksi</span>
-                                </div>
-
-                                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                                    <div className="bg-gradient-to-br from-slate-800 to-slate-900 p-5 rounded-2xl border border-slate-700 flex flex-col justify-center">
-                                        <p className="text-xs text-slate-400 mb-1">Brankas Perusahaan (Vault)</p>
-                                        <p className="text-xl md:text-2xl font-bold text-green-400 mb-3">
-                                            Rp {board.vault.toLocaleString('id-ID')}
-                                        </p>
-                                        <p className="text-[10px] text-slate-500 border-t border-slate-700 pt-2">
-                                            Pajak Penjualan: {board.taxRates.TNX}% (TNX) | {board.taxRates.IVL}% (Lainnya)
-                                        </p>
-                                    </div>
-
-                                    <div className="md:col-span-2 space-y-3">
-                                        {board.directors.map((dir, idx) => (
-                                            <div key={idx} className={`flex items-center justify-between bg-slate-800/40 p-3 rounded-xl border ${dir.id === (phoneNumber + '@s.whatsapp.net') ? 'border-green-500/50 shadow-[0_0_10px_rgba(74,222,128,0.2)]' : 'border-slate-700/30'}`}>
-                                                <div className="flex items-center gap-3">
-                                                    <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold
-                                                        ${idx === 0 ? 'bg-yellow-500/20 text-yellow-400 border border-yellow-500/50' : 
-                                                          idx === 1 ? 'bg-slate-400/20 text-slate-300 border border-slate-400/50' : 
-                                                          'bg-orange-500/20 text-orange-400 border border-orange-500/50'}`}>
-                                                        {idx + 1}
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-sm font-bold flex items-center gap-2">
-                                                            {dir.name}
-                                                            {dir.id === (phoneNumber + '@s.whatsapp.net') && <span className="text-[9px] bg-green-500/20 text-green-400 px-1.5 py-0.5 rounded uppercase">Anda</span>}
-                                                        </p>
-                                                        <p className="text-[10px] text-slate-400">{dir.role}</p>
-                                                    </div>
-                                                </div>
-                                                <div className="text-right">
-                                                    <p className="text-sm font-bold text-indigo-400">{dir.tnx.toLocaleString()} TNX</p>
-                                                </div>
-                                            </div>
-                                        ))}
-                                    </div>
-                                </div>
-                                {board.pendingProposal && (
-                                    <div className="mt-4 bg-orange-500/10 border border-orange-500/30 p-3 rounded-xl flex items-start gap-3">
-                                        <i className="fa-solid fa-triangle-exclamation text-orange-400 mt-0.5"></i>
-                                        <div>
-                                            <p className="text-xs text-orange-400 font-bold">Usulan Pajak Tertunda</p>
-                                            <p className="text-[10px] text-slate-300">CEO mengusulkan pajak {board.pendingProposal.ticker} menjadi {board.pendingProposal.newTax}%. Menunggu persetujuan dewan.</p>
-                                        </div>
-                                    </div>
-                                )}
-                            </div>
-
-                            {/* Market Section */}
-                            <div className="glass p-6 rounded-3xl">
-                                <div className="flex justify-between items-center mb-6">
-                                    <h2 className="text-lg font-bold flex items-center gap-2">
-                                        <i className="fa-solid fa-chart-line text-yellow-400"></i> Live Market Prices
-                                    </h2>
-                                    <span className="text-xs text-slate-500 italic">Data Update: {market.lastUpdate} WITA</span>
-                                </div>
+                            {/* Market Prices */}
+                            <div className="glass p-8 rounded-[2rem]">
+                                <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                                    <i className="fa-solid fa-chart-line text-green-400"></i> Harga Pasar Botani
+                                </h3>
                                 <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                                     {Object.entries(market.prices).map(([ticker, price]) => (
-                                        <div key={ticker} className="bg-slate-800/40 p-4 rounded-2xl card-hover border border-slate-700/50 relative overflow-hidden">
-                                            <div className="absolute -bottom-4 -right-2 opacity-[0.03] text-6xl font-black italic select-none pointer-events-none">{ticker}</div>
-                                            <div className="flex justify-between items-start mb-2 relative z-10">
-                                                <span className={`font-bold ${ticker === 'TNX' ? 'text-indigo-400' : 'text-slate-200'}`}>{ticker}</span>
-                                            </div>
-                                            <p className="text-lg font-mono font-bold text-white relative z-10">
-                                                <span className="text-xs text-slate-500 mr-1">Rp</span> 
-                                                {price.toLocaleString('id-ID')}
-                                            </p>
-                                            <div className="flex justify-between items-center mt-2 relative z-10 border-t border-slate-700/50 pt-2">
-                                                <p className="text-[10px] text-slate-400">Aset Dimiliki:</p>
-                                                <p className="text-xs font-bold text-blue-400">{userData.assets[ticker] || 0} unit</p>
+                                        <div key={ticker} className="bg-slate-900/40 p-5 rounded-3xl border border-slate-800 hover:border-green-500/30 transition-all group">
+                                            <p className="text-xs text-slate-500 font-bold mb-1 group-hover:text-green-400">{ticker}</p>
+                                            <p className="text-lg font-mono font-bold">Rp {price.toLocaleString('id-ID')}</p>
+                                            <div className="mt-3 pt-3 border-t border-slate-800 flex justify-between items-center">
+                                                <span className="text-[10px] text-slate-600 font-bold uppercase">Milik Anda</span>
+                                                <span className="text-xs font-bold text-blue-400">{userData.assets[ticker]}</span>
                                             </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
 
-                            {/* Inventory Section */}
-                            <div className="glass p-6 rounded-3xl">
-                                <h2 className="text-lg font-bold mb-6 flex items-center gap-2">
-                                    <i className="fa-solid fa-box-open text-orange-400"></i> Resource Inventory
-                                </h2>
-                                <div className="grid grid-cols-3 sm:grid-cols-4 md:grid-cols-5 gap-4">
-                                    {Object.entries(userData.inventory).map(([item, qty]) => (
-                                        <div key={item} className="flex flex-col items-center p-3 bg-slate-800/30 rounded-2xl border border-slate-700/30 hover:bg-slate-700/50 transition-colors">
-                                            <div className="w-12 h-12 mb-2 flex items-center justify-center bg-slate-700/50 rounded-xl text-xl shadow-inner">
-                                                {item === 'diamond' && '💎'}
-                                                {item === 'wood' && '🪵'}
-                                                {item === 'rock' && '🪨'}
-                                                {item === 'emas' && '🥇'}
-                                                {item === 'iron' && '⛓️'}
-                                                {item === 'botol' && '🍾'}
-                                                {item === 'sampah' && '🗑️'}
+                            {/* Board Section */}
+                            <div className="glass p-8 rounded-[2rem]">
+                                <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
+                                    <i className="fa-solid fa-crown text-yellow-500"></i> Dewan Direksi TulipNex
+                                </h3>
+                                <div className="space-y-3">
+                                    {board.map((d, i) => (
+                                        <div key={i} className="flex justify-between items-center p-4 bg-slate-900/40 rounded-2xl border border-slate-800">
+                                            <div className="flex items-center gap-4">
+                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-yellow-500/20 text-yellow-500' : 'bg-slate-800 text-slate-400'}`}>
+                                                    {i + 1}
+                                                </div>
+                                                <div>
+                                                    <p className="font-bold text-sm">{d.name}</p>
+                                                    <p className="text-[10px] text-slate-500 font-bold uppercase">{d.role}</p>
+                                                </div>
                                             </div>
-                                            <span className="text-[10px] uppercase text-slate-400 font-bold tracking-wider">{item}</span>
-                                            <span className="text-sm font-bold text-white">{qty.toLocaleString()}</span>
+                                            <div className="text-right">
+                                                <p className="text-sm font-mono font-bold text-indigo-400">{d.tnx.toLocaleString()} TNX</p>
+                                            </div>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
-                    </main>
-
-                    <footer className="max-w-7xl mx-auto mt-12 text-center text-slate-500 text-sm">
-                        <p>© 2026 RTXZY Bot System • Powered by BOTCAHX Framework</p>
-                        <div className="flex justify-center gap-4 mt-2">
-                            <a href="#" className="hover:text-green-400 transition-colors"><i className="fa-brands fa-github"></i> Source</a>
-                            <a href="#" className="hover:text-green-400 transition-colors"><i className="fa-brands fa-whatsapp"></i> Support</a>
-                        </div>
-                    </footer>
+                    </div>
                 </div>
             );
         }
