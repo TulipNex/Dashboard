@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>TulipNex | Live Dashboard</title>
+    <title>TulipNex | Live Terminal</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
     <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -11,249 +11,247 @@
     <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #0f172a; color: #f1f5f9; }
-        .glass { background: rgba(30, 41, 59, 0.7); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.1); }
-        .gradient-text { background: linear-gradient(135deg, #4ade80, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .card-hover:hover { transform: translateY(-4px); transition: all 0.3s ease; border-color: #4ade80; }
-        .loader { border: 3px solid rgba(255,255,255,0.1); border-bottom-color: #4ade80; border-radius: 50%; display: inline-block; animation: rotation 1s linear infinite; }
-        @keyframes rotation { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        body { font-family: 'Plus Jakarta Sans', sans-serif; background-color: #020617; color: #f8fafc; overflow-x: hidden; }
+        .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.05); }
+        .gradient-text { background: linear-gradient(135deg, #10b981, #3b82f6); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        /* Animasi Refresh */
+        .sync-spin { animation: spin 1s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        
+        /* Progress bar refresh */
+        .progress-container { width: 100%; height: 2px; background: rgba(255,255,255,0.05); position: fixed; top: 0; left: 0; z-index: 100; }
+        .progress-bar { height: 100%; background: #10b981; transition: width 0.3s ease; }
+        
+        .card-hover:hover { transform: translateY(-4px); border-color: rgba(16, 185, 129, 0.3); }
+        .market-card { transition: all 0.3s ease; }
     </style>
 </head>
 <body>
     <div id="root"></div>
 
     <script type="text/babel">
-        // =========================================================
-        // KONFIGURASI LINK GITHUB (Sesuaikan dengan Repo Anda)
-        // =========================================================
-        const GITHUB_USER = "TulipNex";
-        const GITHUB_REPO = "Dashboard";
-        const GITHUB_BRANCH = "main"; // Biasanya 'main' atau 'master'
-        
-        // URL Raw GitHub untuk mengambil database.json
-        const RAW_DB_URL = `https://raw.githubusercontent.com/${GITHUB_USER}/${GITHUB_REPO}/${GITHUB_BRANCH}/database.json`;
-        // =========================================================
+        const { useState, useEffect, useCallback } = React;
 
-        const { useState, useEffect } = React;
+        const GITHUB_BASE = "https://raw.githubusercontent.com/TulipNex/Dashboard/main";
 
         function App() {
             const [isLoggedIn, setIsLoggedIn] = useState(false);
-            const [isLoading, setIsLoading] = useState(false);
-            const [errorMsg, setErrorMsg] = useState("");
+            const [isSyncing, setIsSyncing] = useState(false);
             const [phoneNumber, setPhoneNumber] = useState("");
-            
-            // Data States
             const [userData, setUserData] = useState(null);
-            const [market, setMarket] = useState(null);
-            const [board, setBoard] = useState(null);
+            const [market, setMarket] = useState({ prices: {} });
+            const [directors, setDirectors] = useState([]);
+            const [countdown, setCountdown] = useState(60);
+            const [lastSyncTime, setLastSyncTime] = useState("");
 
-            const fetchData = async (phone) => {
-                if (!phone) return setErrorMsg("Harap masukkan nomor WhatsApp!");
-                setIsLoading(true);
-                setErrorMsg("");
-                
+            // 1. Fungsi Sinkronisasi Market (Cepat)
+            const syncMarket = useCallback(async () => {
+                setIsSyncing(true);
                 try {
-                    // Gunakan cache-buster (?t=...) agar browser selalu mengambil data terbaru dari GitHub
-                    const response = await fetch(`${RAW_DB_URL}?t=${new Date().getTime()}`);
-                    
-                    if (!response.ok) {
-                        throw new Error("Gagal mengambil database. Pastikan file database.json sudah di-upload ke GitHub.");
-                    }
-                    
-                    const db = await response.json();
-                    
-                    // Format nomor untuk mencari di database
-                    const cleanPhone = phone.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
-                    const user = db.users[cleanPhone];
-                    
-                    if (!user) {
-                        throw new Error("Nomor tidak ditemukan di database bot. Pastikan Anda sudah terdaftar di bot.");
-                    }
-
-                    const m = db.settings?.trading || {};
-                    const tnxHolders = Object.entries(db.users)
-                        .filter(u => (u[1].tulipnex || 0) > 0)
-                        .sort((a, b) => (b[1].tulipnex || 0) - (a[1].tulipnex || 0));
-
-                    // Tentukan Role Direksi
-                    let role = "Trader Aktif";
-                    if (tnxHolders[0]?.[0] === cleanPhone) role = "👑 CEO";
-                    else if (tnxHolders[1]?.[0] === cleanPhone) role = "🎩 Komisaris";
-                    else if (tnxHolders[2]?.[0] === cleanPhone) role = "👔 Direktur";
-
-                    // Set Data User
-                    setUserData({
-                        name: user.name || "Player",
-                        level: user.level || 0,
-                        exp: user.exp || 0,
-                        maxExp: (user.level + 1) * 1000,
-                        money: user.money || 0,
-                        bankDebt: user.bankDebt || 0,
-                        role: role,
-                        assets: {
-                            IVL: user.ivl || 0, LBT: user.lbt || 0, IRC: user.irc || 0,
-                            LTN: user.ltn || 0, RSX: user.rsx || 0, TNX: user.tulipnex || 0
-                        }
-                    });
-
-                    setMarket({
-                        prices: m.prices || {},
-                        lastUpdate: m.lastMinuteMarker || "-",
-                        vault: m.vault || 0
-                    });
-
-                    setBoard(tnxHolders.slice(0, 3).map((h, i) => ({
-                        name: h[1].name,
-                        tnx: h[1].tulipnex,
-                        role: i === 0 ? "CEO" : i === 1 ? "Komisaris" : "Direktur"
-                    })));
-
-                    setIsLoggedIn(true);
-                } catch (err) {
-                    setErrorMsg(err.message);
-                } finally {
-                    setIsLoading(false);
+                    const res = await fetch(`${GITHUB_BASE}/market.json?t=${Date.now()}`);
+                    if (!res.ok) throw new Error();
+                    const data = await res.json();
+                    setMarket(data);
+                    setDirectors(data.directors || []);
+                    setLastSyncTime(new Date().toLocaleTimeString());
+                    setCountdown(60);
+                } catch (e) {
+                    console.error("Gagal sinkronisasi market.");
                 }
+                setIsSyncing(false);
+            }, []);
+
+            // 2. Fungsi Sinkronisasi Total (Profil + Market)
+            const fullSync = async () => {
+                if (!phoneNumber) return;
+                setIsSyncing(true);
+                try {
+                    const res = await fetch(`${GITHUB_BASE}/database.json?t=${Date.now()}`);
+                    const db = await res.json();
+                    const jid = phoneNumber.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+                    const user = db.users[jid];
+
+                    if (user) {
+                        setUserData(user);
+                        await syncMarket(); // Update harga juga
+                    }
+                } catch (e) {
+                    console.error("Gagal sinkronisasi data profil.");
+                }
+                setIsSyncing(false);
             };
+
+            // 3. Handle Login
+            const handleLogin = async (e) => {
+                e.preventDefault();
+                if (!phoneNumber) return;
+                setIsSyncing(true);
+                try {
+                    const res = await fetch(`${GITHUB_BASE}/database.json?t=${Date.now()}`);
+                    const db = await res.json();
+                    const jid = phoneNumber.replace(/[^0-9]/g, '') + '@s.whatsapp.net';
+                    const user = db.users[jid];
+
+                    if (!user) throw new Error("Nomor tidak terdaftar!");
+
+                    setUserData(user);
+                    await syncMarket();
+                    setIsLoggedIn(true);
+                } catch (e) {
+                    alert(e.message);
+                }
+                setIsSyncing(false);
+            };
+
+            // 4. Auto-Refresh Loop
+            useEffect(() => {
+                let timer;
+                if (isLoggedIn) {
+                    timer = setInterval(() => {
+                        setCountdown(prev => {
+                            if (prev <= 1) {
+                                syncMarket();
+                                return 60;
+                            }
+                            return prev - 1;
+                        });
+                    }, 1000);
+                }
+                return () => clearInterval(timer);
+            }, [isLoggedIn, syncMarket]);
 
             if (!isLoggedIn) {
                 return (
-                    <div className="min-h-screen flex items-center justify-center p-4 bg-slate-950">
-                        <div className="glass p-8 rounded-3xl w-full max-w-md shadow-2xl border-green-500/20">
-                            <div className="text-center mb-8">
-                                <h1 className="text-4xl font-black gradient-text tracking-tighter">TULIPNEX</h1>
-                                <p className="text-slate-400 text-sm mt-2 font-medium">Cyber-Botanical Exchange Dashboard</p>
-                            </div>
-
-                            {errorMsg && (
-                                <div className="bg-red-500/10 border border-red-500/30 text-red-400 p-3 rounded-xl mb-6 text-xs flex items-center gap-2">
-                                    <i className="fa-solid fa-circle-exclamation"></i> {errorMsg}
-                                </div>
-                            )}
-
-                            <div className="space-y-4">
-                                <div className="relative">
-                                    <i className="fa-brands fa-whatsapp absolute left-4 top-4 text-slate-500"></i>
-                                    <input 
-                                        type="text" 
-                                        placeholder="628xxxxxxxxxx" 
-                                        className="w-full bg-slate-900/50 p-4 pl-12 rounded-2xl border border-slate-800 outline-none focus:border-green-500 transition-all text-sm"
-                                        value={phoneNumber}
-                                        onChange={(e) => setPhoneNumber(e.target.value)}
-                                    />
-                                </div>
-                                <button 
-                                    onClick={() => fetchData(phoneNumber)}
-                                    className="w-full bg-gradient-to-r from-green-500 to-emerald-600 py-4 rounded-2xl font-bold text-white shadow-lg shadow-green-500/20 hover:scale-[1.02] active:scale-95 transition-all flex justify-center items-center gap-2"
-                                >
-                                    {isLoading ? <span className="loader w-5 h-5"></span> : "Masuk ke Dashboard"}
+                    <div className="min-h-screen flex items-center justify-center p-6">
+                        <div className="glass p-10 rounded-[2.5rem] w-full max-w-md shadow-2xl">
+                            <h1 className="text-4xl font-black mb-2 text-center gradient-text tracking-tighter">TULIPNEX</h1>
+                            <p className="text-slate-500 text-xs text-center font-bold uppercase tracking-widest mb-10">Access Terminal</p>
+                            <form onSubmit={handleLogin} className="space-y-4">
+                                <input 
+                                    type="text" 
+                                    className="w-full bg-slate-900 border border-slate-800 p-4 rounded-2xl outline-none focus:border-green-500 transition-all"
+                                    placeholder="Contoh: 628989240628"
+                                    value={phoneNumber}
+                                    onChange={(e) => setPhoneNumber(e.target.value)}
+                                />
+                                <button className="w-full bg-green-600 hover:bg-green-500 p-4 rounded-2xl font-bold shadow-lg shadow-green-900/20 transition-all flex justify-center items-center gap-3">
+                                    {isSyncing ? <i className="fa-solid fa-circle-notch sync-spin text-xl"></i> : "Sign In"}
                                 </button>
-                            </div>
-                            <p className="text-center text-[10px] text-slate-600 mt-6 uppercase tracking-widest font-bold">Data Terenkripsi & Aman</p>
+                            </form>
                         </div>
                     </div>
                 );
             }
 
             return (
-                <div className="min-h-screen p-4 md:p-8 bg-slate-950">
-                    <header className="max-w-7xl mx-auto flex justify-between items-center mb-10">
-                        <div>
-                            <h1 className="text-2xl font-bold gradient-text">TulipNex Live</h1>
-                            <p className="text-[10px] text-slate-500 uppercase tracking-widest">Database Sync: GitHub Raw</p>
-                        </div>
+                <div className="min-h-screen pb-20">
+                    {/* Top Progress Bar */}
+                    <div className="progress-container">
+                        <div className="progress-bar" style={{ width: `${(countdown / 60) * 100}%` }}></div>
+                    </div>
+
+                    {/* Navbar */}
+                    <nav className="p-6 md:p-10 max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-6">
                         <div className="flex items-center gap-4">
-                             <button 
-                                onClick={() => fetchData(phoneNumber)}
-                                className="glass p-2 px-4 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all"
-                            >
-                                <i className="fa-solid fa-sync mr-1"></i> Refresh
-                            </button>
+                            <div className="w-10 h-10 bg-green-500 rounded-xl flex items-center justify-center shadow-lg shadow-green-500/20">
+                                <i className="fa-solid fa-bolt-lightning text-white"></i>
+                            </div>
+                            <div>
+                                <h1 className="text-xl font-black tracking-tighter">LIVE TERMINAL</h1>
+                                <p className="text-[10px] text-slate-500 font-bold uppercase flex items-center gap-2">
+                                    <span className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+                                    Terhubung • Refresh dalam {countdown} detik
+                                </p>
+                            </div>
+                        </div>
+                        <div className="flex gap-3">
                             <button 
-                                onClick={() => setIsLoggedIn(false)}
-                                className="text-xs text-red-400 font-bold hover:underline"
+                                onClick={fullSync}
+                                disabled={isSyncing}
+                                className="glass px-5 py-3 rounded-xl text-xs font-bold hover:bg-slate-800 transition-all flex items-center gap-2"
                             >
+                                <i className={`fa-solid fa-arrows-rotate ${isSyncing ? 'sync-spin text-green-400' : ''}`}></i>
+                                Full Sync
+                            </button>
+                            <button onClick={() => setIsLoggedIn(false)} className="glass px-5 py-3 rounded-xl text-xs font-bold text-red-400 hover:bg-red-500/10 transition-all uppercase">
                                 Logout
                             </button>
                         </div>
-                    </header>
+                    </nav>
 
-                    <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        {/* Profile Section */}
-                        <div className="lg:col-span-1 space-y-6">
-                            <div className="glass p-8 rounded-[2rem] border-green-500/10">
+                    <main className="max-w-7xl mx-auto px-6 grid grid-cols-1 lg:grid-cols-12 gap-8">
+                        {/* Sidebar: Profile */}
+                        <div className="lg:col-span-4 space-y-6">
+                            <div className="glass p-8 rounded-[2.5rem] relative overflow-hidden">
+                                <div className="absolute top-0 right-0 p-6 opacity-5 pointer-events-none">
+                                    <i className="fa-solid fa-user-shield text-8xl"></i>
+                                </div>
+                                <h3 className="text-[10px] font-black uppercase text-slate-500 tracking-widest mb-6">Informasi Akun</h3>
                                 <div className="flex items-center gap-4 mb-8">
-                                    <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center text-2xl shadow-lg">👤</div>
+                                    <div className="w-14 h-14 bg-gradient-to-br from-green-400 to-blue-500 rounded-2xl flex items-center justify-center text-2xl font-bold shadow-lg">
+                                        {userData.name[0]}
+                                    </div>
                                     <div>
-                                        <h2 className="text-xl font-bold">{userData.name}</h2>
-                                        <span className="text-[10px] bg-green-500/20 text-green-400 px-2 py-0.5 rounded-full font-bold">{userData.role}</span>
+                                        <h2 className="font-bold text-lg leading-tight">{userData.name}</h2>
+                                        <p className="text-[10px] text-green-400 font-bold uppercase">Level {userData.level}</p>
                                     </div>
                                 </div>
-                                
-                                <div className="space-y-4">
-                                    <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl">
-                                        <span className="text-slate-400 text-sm">Tunai</span>
-                                        <span className="font-bold">Rp {userData.money.toLocaleString('id-ID')}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl">
-                                        <span className="text-slate-400 text-sm">Utang</span>
-                                        <span className="font-bold text-red-400">Rp {userData.bankDebt.toLocaleString('id-ID')}</span>
-                                    </div>
-                                    <div className="flex justify-between items-center bg-slate-900/50 p-4 rounded-2xl">
-                                        <span className="text-slate-400 text-sm">Level</span>
-                                        <span className="font-bold text-blue-400">Lv {userData.level}</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        {/* Market & Board Section */}
-                        <div className="lg:col-span-2 space-y-6">
-                            {/* Market Prices */}
-                            <div className="glass p-8 rounded-[2rem]">
-                                <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                                    <i className="fa-solid fa-chart-line text-green-400"></i> Harga Pasar Botani
-                                </h3>
-                                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                    {Object.entries(market.prices).map(([ticker, price]) => (
-                                        <div key={ticker} className="bg-slate-900/40 p-5 rounded-3xl border border-slate-800 hover:border-green-500/30 transition-all group">
-                                            <p className="text-xs text-slate-500 font-bold mb-1 group-hover:text-green-400">{ticker}</p>
-                                            <p className="text-lg font-mono font-bold">Rp {price.toLocaleString('id-ID')}</p>
-                                            <div className="mt-3 pt-3 border-t border-slate-800 flex justify-between items-center">
-                                                <span className="text-[10px] text-slate-600 font-bold uppercase">Milik Anda</span>
-                                                <span className="text-xs font-bold text-blue-400">{userData.assets[ticker]}</span>
-                                            </div>
-                                        </div>
-                                    ))}
-                                </div>
-                            </div>
-
-                            {/* Board Section */}
-                            <div className="glass p-8 rounded-[2rem]">
-                                <h3 className="text-lg font-bold mb-6 flex items-center gap-2">
-                                    <i className="fa-solid fa-crown text-yellow-500"></i> Dewan Direksi TulipNex
-                                </h3>
                                 <div className="space-y-3">
-                                    {board.map((d, i) => (
-                                        <div key={i} className="flex justify-between items-center p-4 bg-slate-900/40 rounded-2xl border border-slate-800">
+                                    <div className="bg-slate-900/60 p-4 rounded-2xl flex justify-between items-center border border-white/5">
+                                        <span className="text-slate-500 text-xs font-bold uppercase">Saldo</span>
+                                        <span className="font-black text-white">Rp {userData.money?.toLocaleString('id-ID')}</span>
+                                    </div>
+                                    <div className="bg-slate-900/60 p-4 rounded-2xl flex justify-between items-center border border-white/5">
+                                        <span className="text-slate-500 text-xs font-bold uppercase">Debt</span>
+                                        <span className="font-black text-red-400">Rp {userData.bankDebt?.toLocaleString('id-ID') || 0}</span>
+                                    </div>
+                                </div>
+                                <button 
+                                    onClick={fullSync}
+                                    className="w-full mt-6 py-3 rounded-xl text-[10px] font-black uppercase tracking-widest bg-white/5 hover:bg-white/10 transition-all"
+                                >
+                                    Perbarui Profil
+                                </button>
+                                <p className="text-[9px] text-center text-slate-600 mt-4 font-bold uppercase tracking-widest">Terakhir Sinkron: {lastSyncTime}</p>
+                            </div>
+                        </div>
+
+                        {/* Content: Market */}
+                        <div className="lg:col-span-8 space-y-8">
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                {Object.entries(market.prices).map(([ticker, price]) => (
+                                    <div key={ticker} className="glass p-6 rounded-[2rem] market-card card-hover">
+                                        <div className="flex justify-between items-center mb-3">
+                                            <span className="text-[10px] font-black uppercase text-slate-500 tracking-widest">{ticker}</span>
+                                            <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></div>
+                                        </div>
+                                        <p className="text-xl font-black tracking-tighter">Rp {price.toLocaleString('id-ID')}</p>
+                                        <div className="mt-4 pt-4 border-t border-white/5 flex justify-between items-center">
+                                            <span className="text-[9px] text-slate-600 font-bold uppercase">Milik Anda</span>
+                                            <span className="text-[11px] font-black text-emerald-400">{userData[ticker.toLowerCase()] || userData.tulipnex || 0}</span>
+                                        </div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Directors */}
+                            <div className="glass p-8 rounded-[2.5rem]">
+                                <h3 className="text-[10px] font-black uppercase tracking-[0.2em] mb-6 text-slate-500">Dewan Direksi TulipNex</h3>
+                                <div className="space-y-3">
+                                    {directors.map((d, i) => (
+                                        <div key={i} className={`flex justify-between items-center p-4 rounded-2xl border ${d.jid === (phoneNumber + '@s.whatsapp.net') ? 'bg-green-500/5 border-green-500/20' : 'bg-slate-900/30 border-white/5'}`}>
                                             <div className="flex items-center gap-4">
-                                                <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold text-sm ${i === 0 ? 'bg-yellow-500/20 text-yellow-500' : 'bg-slate-800 text-slate-400'}`}>
-                                                    {i + 1}
-                                                </div>
-                                                <div>
-                                                    <p className="font-bold text-sm">{d.name}</p>
-                                                    <p className="text-[10px] text-slate-500 font-bold uppercase">{d.role}</p>
-                                                </div>
+                                                <span className="text-[10px] font-black text-slate-600">0{i+1}</span>
+                                                <p className="text-sm font-bold">{d.name}</p>
                                             </div>
-                                            <div className="text-right">
-                                                <p className="text-sm font-mono font-bold text-indigo-400">{d.tnx.toLocaleString()} TNX</p>
-                                            </div>
+                                            <span className="font-mono text-xs font-bold text-emerald-400">{d.tnx.toLocaleString()} TNX</span>
                                         </div>
                                     ))}
                                 </div>
                             </div>
                         </div>
-                    </div>
+                    </main>
                 </div>
             );
         }
