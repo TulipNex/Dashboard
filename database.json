@@ -416,7 +416,7 @@
       "waifu": "Belum Di Set",
       "husbu": "Belum Di Set",
       "pc": 0,
-      "exp": 1090981,
+      "exp": 1091008,
       "coin": 0,
       "atm": 0,
       "limit": 87,
@@ -1222,7 +1222,7 @@
       "waifu": "Belum Di Set",
       "husbu": "Belum Di Set",
       "pc": 0,
-      "exp": 532704,
+      "exp": 532751,
       "coin": 0,
       "atm": 0,
       "limit": 87,
@@ -1537,9 +1537,9 @@
       "lastdate": 0,
       "lasttambang": 0,
       "lastngepet": 0,
-      "command": 335,
-      "commandTotal": 335,
-      "lastCmd": 1774388317483,
+      "command": 337,
+      "commandTotal": 337,
+      "lastCmd": 1774397530953,
       "glimit": 10,
       "pertambangan": 0,
       "lastbossbattle": 0,
@@ -4732,10 +4732,10 @@
           "bannedTime": 0,
           "chat": 0,
           "chatTotal": 0,
-          "command": 203,
-          "commandTotal": 203,
+          "command": 205,
+          "commandTotal": 205,
           "lastseen": 0,
-          "lastCmd": 1774388317483
+          "lastCmd": 1774397530953
         },
         "628989240628@s.whatsapp.net": {
           "blacklist": false,
@@ -4806,8 +4806,8 @@
           "lastSeen": 1774397476024
         },
         "6285324023198@s.whatsapp.net": {
-          "chatCount": 76,
-          "lastSeen": 1774388317483
+          "chatCount": 78,
+          "lastSeen": 1774397530946
         },
         "120363284305573016@g.us": {
           "chatCount": 1,
@@ -6335,10 +6335,10 @@
       "lastSuccess": 0
     },
     "info-dashboard.js": {
-      "total": 12,
-      "success": 12,
-      "last": 1774396076382,
-      "lastSuccess": 1774396076382
+      "total": 13,
+      "success": 13,
+      "last": 1774397477581,
+      "lastSuccess": 1774397477581
     },
     "info-database.js": {
       "total": 15,
@@ -8325,10 +8325,10 @@
       "lastSuccess": 1774243433450
     },
     "trading-indicator.js": {
-      "total": 57,
-      "success": 57,
-      "last": 1774385385084,
-      "lastSuccess": 1774385385084
+      "total": 58,
+      "success": 58,
+      "last": 1774397531175,
+      "lastSuccess": 1774397531175
     },
     "trading-portfolio.js": {
       "total": 11,
@@ -8337,10 +8337,10 @@
       "lastSuccess": 1774385292258
     },
     "trading-trade.js": {
-      "total": 28,
-      "success": 28,
-      "last": 1774369699647,
-      "lastSuccess": 1774369699647
+      "total": 29,
+      "success": 29,
+      "last": 1774397524038,
+      "lastSuccess": 1774397524038
     },
     "trading-engine-core.js": {
       "total": 26,
@@ -8517,8 +8517,16 @@
       ]
     },
     "trading": {
-      "lastUpdate": 1774397463953,
+      "lastUpdate": 1774397523958,
       "prices": {
+        "IVL": 63796,
+        "LBT": 394828,
+        "IRC": 3649491,
+        "LTN": 35102291,
+        "RSX": 339025230,
+        "TNX": 3814336444
+      },
+      "prevPrices": {
         "IVL": 64706,
         "LBT": 414448,
         "IRC": 3496024,
@@ -8526,17 +8534,8 @@
         "RSX": 349270297,
         "TNX": 3781815638
       },
-      "prevPrices": {
-        "IVL": 65311,
-        "LBT": 402806,
-        "IRC": 3506970,
-        "LTN": 36457745,
-        "RSX": 343340718,
-        "TNX": 3768744528
-      },
       "history": {
         "IVL": [
-          67470,
           67214,
           65695,
           67206,
@@ -8545,10 +8544,10 @@
           67359,
           65607,
           65311,
-          64706
+          64706,
+          63796
         ],
         "LBT": [
-          402298,
           404615,
           402725,
           389604,
@@ -8557,10 +8556,10 @@
           391312,
           391201,
           402806,
-          414448
+          414448,
+          394828
         ],
         "IRC": [
-          3540453,
           3445304,
           3467029,
           3560711,
@@ -8569,10 +8568,10 @@
           3742107,
           3563485,
           3506970,
-          3496024
+          3496024,
+          3649491
         ],
         "LTN": [
-          34794334,
           33838506,
           33844878,
           34789698,
@@ -8581,10 +8580,10 @@
           35961520,
           37371728,
           36457745,
-          36030364
+          36030364,
+          35102291
         ],
         "RSX": [
-          378359839,
           368751113,
           352979685,
           352135896,
@@ -8593,10 +8592,10 @@
           354328179,
           343195037,
           343340718,
-          349270297
+          349270297,
+          339025230
         ],
         "TNX": [
-          3979071718,
           3788048599,
           3759042481,
           3749131598,
@@ -8605,7 +8604,8 @@
           3652484568,
           3717433935,
           3768744528,
-          3781815638
+          3781815638,
+          3814336444
         ]
       },
       "ath": {
@@ -8630,7 +8630,7 @@
         "type": "bull",
         "ticker": "TNX",
         "mult": 2.9,
-        "dur": 6
+        "dur": 5
       },
       "trends": {
         "IVL": {
@@ -8662,7 +8662,7 @@
         "120363406727405732@g.us",
         "120363284305573016@g.us"
       ],
-      "lastMinuteMarker": "2026-03-25 08:11",
+      "lastMinuteMarker": "2026-03-25 08:12",
       "vault": 430562121,
       "taxRates": {
         "IVL": 1.5,
@@ -8674,10 +8674,6 @@
       },
       "taxProposal": null,
       "eventHistory": [
-        {
-          "title": "FIBER OPTIC CUT",
-          "time": 1774393923627
-        },
         {
           "title": "NEXUS CORE UPGRADE",
           "time": 1774397343944
