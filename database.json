@@ -1222,7 +1222,7 @@
       "waifu": "Belum Di Set",
       "husbu": "Belum Di Set",
       "pc": 0,
-      "exp": 533315,
+      "exp": 533433,
       "coin": 0,
       "atm": 0,
       "limit": 84,
@@ -1537,9 +1537,9 @@
       "lastdate": 0,
       "lasttambang": 0,
       "lastngepet": 0,
-      "command": 360,
-      "commandTotal": 360,
-      "lastCmd": 1774435199205,
+      "command": 365,
+      "commandTotal": 365,
+      "lastCmd": 1774435277107,
       "glimit": 10,
       "pertambangan": 0,
       "lastbossbattle": 0,
@@ -4732,10 +4732,10 @@
           "bannedTime": 0,
           "chat": 0,
           "chatTotal": 0,
-          "command": 221,
-          "commandTotal": 221,
+          "command": 226,
+          "commandTotal": 226,
           "lastseen": 0,
-          "lastCmd": 1774435199205
+          "lastCmd": 1774435277107
         },
         "628989240628@s.whatsapp.net": {
           "blacklist": false,
@@ -4806,8 +4806,8 @@
           "lastSeen": 1774430400695
         },
         "6285324023198@s.whatsapp.net": {
-          "chatCount": 107,
-          "lastSeen": 1774435199202
+          "chatCount": 112,
+          "lastSeen": 1774435277107
         },
         "120363284305573016@g.us": {
           "chatCount": 2,
@@ -6887,10 +6887,10 @@
       "lastSuccess": 1771413448426
     },
     "owner-sfp-df.js": {
-      "total": 6,
-      "success": 2,
-      "last": 1774193232163,
-      "lastSuccess": 1774193232163
+      "total": 9,
+      "success": 4,
+      "last": 1774435271059,
+      "lastSuccess": 1774435271059
     },
     "payment.js": {
       "total": 6,
@@ -7887,10 +7887,10 @@
       "lastSuccess": 1773547666960
     },
     "owner-sf.js": {
-      "total": 30,
-      "success": 25,
-      "last": 1774435199395,
-      "lastSuccess": 1774435199395
+      "total": 31,
+      "success": 26,
+      "last": 1774435220207,
+      "lastSuccess": 1774435220207
     },
     "owner-getfile.js": {
       "total": 16,
@@ -7983,10 +7983,10 @@
       "lastSuccess": 1773586901355
     },
     "info-ping.js": {
-      "total": 91,
-      "success": 91,
-      "last": 1774416595692,
-      "lastSuccess": 1774416595692
+      "total": 92,
+      "success": 92,
+      "last": 1774435277350,
+      "lastSuccess": 1774435277350
     },
     "info-info_bot.js": {
       "total": 3,
@@ -8523,8 +8523,16 @@
       ]
     },
     "trading": {
-      "lastUpdate": 1774435203125,
+      "lastUpdate": 1774435263135,
       "prices": {
+        "IVL": 71305,
+        "LBT": 358881,
+        "IRC": 3719982,
+        "LTN": 40094889,
+        "RSX": 411249350,
+        "TNX": 4209267006
+      },
+      "prevPrices": {
         "IVL": 69370,
         "LBT": 343126,
         "IRC": 3872522,
@@ -8532,17 +8540,8 @@
         "RSX": 406716485,
         "TNX": 4031712857
       },
-      "prevPrices": {
-        "IVL": 69945,
-        "LBT": 329456,
-        "IRC": 3995994,
-        "LTN": 37683289,
-        "RSX": 419916080,
-        "TNX": 4147736079
-      },
       "history": {
         "IVL": [
-          75356,
           73438,
           73439,
           73161,
@@ -8551,10 +8550,10 @@
           71887,
           70709,
           69945,
-          69370
+          69370,
+          71305
         ],
         "LBT": [
-          341600,
           356856,
           349802,
           347983,
@@ -8563,10 +8562,10 @@
           337343,
           343864,
           329456,
-          343126
+          343126,
+          358881
         ],
         "IRC": [
-          3751193,
           3856003,
           3689526,
           3600558,
@@ -8575,10 +8574,10 @@
           3987493,
           3993657,
           3995994,
-          3872522
+          3872522,
+          3719982
         ],
         "LTN": [
-          39851682,
           38869436,
           40661697,
           41740066,
@@ -8587,10 +8586,10 @@
           37240797,
           38634662,
           37683289,
-          38755471
+          38755471,
+          40094889
         ],
         "RSX": [
-          400020031,
           387147737,
           399882872,
           417562870,
@@ -8599,10 +8598,10 @@
           411706224,
           430292335,
           419916080,
-          406716485
+          406716485,
+          411249350
         ],
         "TNX": [
-          4382440583,
           4466438390,
           4494422468,
           4279082308,
@@ -8611,7 +8610,8 @@
           4214325109,
           4364623393,
           4147736079,
-          4031712857
+          4031712857,
+          4209267006
         ]
       },
       "ath": {
@@ -8631,11 +8631,12 @@
         "TNX": 0
       },
       "activeEvent": {
-        "title": "STABLE",
-        "msg": "Normal",
-        "ticker": null,
-        "mult": 1,
-        "dur": 0
+        "title": "SLOW SYNC",
+        "msg": "Proses sinkronisasi database server IrisCode mengalami kelambatan di region Asia.",
+        "type": "bear",
+        "ticker": "IRC",
+        "mult": -1.8,
+        "dur": 6
       },
       "trends": {
         "IVL": {
@@ -8667,7 +8668,7 @@
         "120363406727405732@g.us",
         "120363284305573016@g.us"
       ],
-      "lastMinuteMarker": "2026-03-25 18:40",
+      "lastMinuteMarker": "2026-03-25 18:41",
       "vault": 623603386,
       "taxRates": {
         "IVL": 1.5,
@@ -8678,14 +8679,19 @@
         "TNX": 2
       },
       "taxProposal": null,
-      "eventHistory": [],
+      "eventHistory": [
+        {
+          "title": "SLOW SYNC",
+          "time": 1774435263135
+        }
+      ],
       "announcerGroup": "120363284305573016@g.us",
       "lastDividendClaim": 1774356902237,
       "lastCanceledEvent": null,
       "probabilities": {
         "IVL": "50%",
         "LBT": "50%",
-        "IRC": "50%",
+        "IRC": "20%",
         "LTN": "50%",
         "RSX": "50%",
         "TNX": "50%"
