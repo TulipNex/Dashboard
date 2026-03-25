@@ -416,7 +416,7 @@
       "waifu": "Belum Di Set",
       "husbu": "Belum Di Set",
       "pc": 0,
-      "exp": 1092155,
+      "exp": 1092222,
       "coin": 0,
       "atm": 0,
       "limit": 81,
@@ -731,9 +731,9 @@
       "lastdate": 0,
       "lasttambang": 0,
       "lastngepet": 0,
-      "command": 3407,
-      "commandTotal": 3407,
-      "lastCmd": 1774411578346,
+      "command": 3410,
+      "commandTotal": 3410,
+      "lastCmd": 1774411629021,
       "glimit": 10,
       "pertambangan": 0,
       "lastbossbattle": 0,
@@ -5212,10 +5212,10 @@
           "bannedTime": 0,
           "chat": 0,
           "chatTotal": 0,
-          "command": 1898,
-          "commandTotal": 1898,
+          "command": 1901,
+          "commandTotal": 1901,
           "lastseen": 0,
-          "lastCmd": 1774411578346
+          "lastCmd": 1774411629021
         },
         "628989240628@s.whatsapp.net": {
           "blacklist": false,
@@ -5289,8 +5289,8 @@
       "mutedUsers": [],
       "memberStats": {
         "6282215415550@s.whatsapp.net": {
-          "chatCount": 1718,
-          "lastSeen": 1774411578341
+          "chatCount": 1722,
+          "lastSeen": 1774411629016
         },
         "249348621369556@lid": {
           "chatCount": 8,
@@ -8427,10 +8427,10 @@
       "lastSuccess": 1774386393835
     },
     "tour.js": {
-      "total": 9,
-      "success": 9,
-      "last": 1774411578604,
-      "lastSuccess": 1774411578604
+      "total": 12,
+      "success": 12,
+      "last": 1774411629030,
+      "lastSuccess": 1774411629030
     }
   },
   "msgs": {},
@@ -8523,8 +8523,16 @@
       ]
     },
     "trading": {
-      "lastUpdate": 1774411560756,
+      "lastUpdate": 1774411620775,
       "prices": {
+        "IVL": 68414,
+        "LBT": 391464,
+        "IRC": 3498651,
+        "LTN": 72705959,
+        "RSX": 506405400,
+        "TNX": 6312936290
+      },
+      "prevPrices": {
         "IVL": 67921,
         "LBT": 377998,
         "IRC": 3357612,
@@ -8532,17 +8540,8 @@
         "RSX": 527979344,
         "TNX": 6075968576
       },
-      "prevPrices": {
-        "IVL": 69202,
-        "LBT": 376732,
-        "IRC": 3526771,
-        "LTN": 70174185,
-        "RSX": 522385596,
-        "TNX": 6150188820
-      },
       "history": {
         "IVL": [
-          71014,
           71743,
           72202,
           71279,
@@ -8551,10 +8550,10 @@
           68584,
           67549,
           69202,
-          67921
+          67921,
+          68414
         ],
         "LBT": [
-          393474,
           383252,
           394724,
           402058,
@@ -8563,10 +8562,10 @@
           400372,
           386039,
           376732,
-          377998
+          377998,
+          391464
         ],
         "IRC": [
-          3444637,
           3584637,
           3425621,
           3405742,
@@ -8575,10 +8574,10 @@
           3445161,
           3471063,
           3526771,
-          3357612
+          3357612,
+          3498651
         ],
         "LTN": [
-          69959542,
           67702089,
           65252729,
           66798082,
@@ -8587,10 +8586,10 @@
           69302337,
           71384040,
           70174185,
-          70215386
+          70215386,
+          72705959
         ],
         "RSX": [
-          498751731,
           500897121,
           502788361,
           514068923,
@@ -8599,10 +8598,10 @@
           490718378,
           510386227,
           522385596,
-          527979344
+          527979344,
+          506405400
         ],
         "TNX": [
-          6426099282,
           6317106650,
           6548896209,
           6450122266,
@@ -8611,7 +8610,8 @@
           6223188265,
           6411762428,
           6150188820,
-          6075968576
+          6075968576,
+          6312936290
         ]
       },
       "ath": {
@@ -8667,7 +8667,7 @@
         "120363406727405732@g.us",
         "120363284305573016@g.us"
       ],
-      "lastMinuteMarker": "2026-03-25 12:06",
+      "lastMinuteMarker": "2026-03-25 12:07",
       "vault": 623603386,
       "taxRates": {
         "IVL": 1.5,
@@ -8698,7 +8698,7 @@
     "Kompe 2026": {
       "name": "Kompe 2026",
       "chat": "120363406727405732@g.us",
-      "status": "registration",
+      "status": "ongoing",
       "participants": [
         {
           "id": "⁨Wann⁩@s.whatsapp.net",
@@ -8717,7 +8717,56 @@
           "name": "AC"
         }
       ],
-      "matches": [],
+      "matches": [
+        {
+          "id": 1,
+          "home": "@⁨Wann⁩",
+          "away": "AC",
+          "scoreH": 0,
+          "scoreA": 0,
+          "isDone": false
+        },
+        {
+          "id": 2,
+          "home": "Bu",
+          "away": "@⁨Wawan⁩",
+          "scoreH": 0,
+          "scoreA": 0,
+          "isDone": false
+        },
+        {
+          "id": 3,
+          "home": "@⁨Wann⁩",
+          "away": "@⁨Wawan⁩",
+          "scoreH": 0,
+          "scoreA": 0,
+          "isDone": false
+        },
+        {
+          "id": 4,
+          "home": "AC",
+          "away": "Bu",
+          "scoreH": 0,
+          "scoreA": 0,
+          "isDone": false
+        },
+        {
+          "id": 5,
+          "home": "@⁨Wann⁩",
+          "away": "Bu",
+          "scoreH": 0,
+          "scoreA": 0,
+          "isDone": false
+        },
+        {
+          "id": 6,
+          "home": "@⁨Wawan⁩",
+          "away": "AC",
+          "scoreH": 0,
+          "scoreA": 0,
+          "isDone": false
+        }
+      ],
       "logs": []
     }
   }
